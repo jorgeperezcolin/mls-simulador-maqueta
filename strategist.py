@@ -1,41 +1,58 @@
-from typing import Dict, Any, List
-
+import json
 
 class Strategist:
-    """Módulo 'Estratega MLS' para recomendaciones ejecutivas."""
+    def __init__(self, llm, knowledge_base):
+        self.llm = llm
+        self.kb = knowledge_base
 
-    def recommend(self, resultados: Dict[str, Any], activaciones: Dict[str, bool]) -> List[str]:
-        recs = []
+    # ------------------------------
+    #   RECOMENDACIONES PARA MLS
+    # ------------------------------
+    def recommend_actions(self, simulation_output):
+        prompt = f"""
+        Contexto: simulación del mercado prendario para MLS.
 
-        originacion = resultados["originacion"]
-        ticket = resultados["ticket_promedio"]
+        Resultados de la simulación:
+        {simulation_output}
 
-        # Originación
-        if originacion < 95:
-            recs.append("Reforzar campaña digital en zonas rojas durante 72 horas.")
-        elif originacion > 110:
-            recs.append("Probar aumento de LTV en +1% en AGEBs rentables.")
-        else:
-            recs.append("Mantener intensidad de campañas y monitoreo diario.")
+        Devuelve 3–5 recomendaciones estratégicas para MLS,
+        en lenguaje ejecutivo y orientadas a acciones concretas.
+        """
+        return self.llm.generate(prompt)
 
-        # Ticket
-        if ticket < 950:
-            recs.append("Ajustar esquema de tasas en CDMX para evitar erosión del ticket.")
-        elif ticket > 1050:
-            recs.append("Evaluar subida ligera de tasa para capturar margen táctico.")
-        else:
-            recs.append("Mantener pricing actual, priorizar crecimiento en originación.")
+    # ------------------------------
+    #   REACCIONES DE COMPETIDORES
+    # ------------------------------
+    def predict_competitor_reactions(self, scenario: dict):
+        prompt = f"""
+        Predice la reacción más probable de cinco competidores del mercado prendario:
 
-        # Competencia
-        if activaciones.get("competencia", False):
-            recs.append("Diferenciar mensaje táctico vs. Nacional y First Cash.")
+        - Nacional Monte de Piedad
+        - Fundación Dondé
+        - First Cash
+        - PrestaPrenda
+        - Empeños Mexicanos
 
-        # Zonas
-        if activaciones.get("sucursales", False):
-            recs.append("Priorizar sucursales con alta recurrencia.")
+        Basado en este escenario:
+        {json.dumps(scenario, ensure_ascii=False, indent=2)}
 
-        # Oro
-        if activaciones.get("oro", False):
-            recs.append("Sincronizar ajustes de LTV con monitoreo diario del oro.")
+        Usa patrones reales del sector (escalas, modelos de negocio, tácticas históricas).
 
-        return recs[:5]
+        Devuelve SOLO un JSON con esta estructura EXACTA:
+
+        {{
+          "Nacional Monte de Piedad": "...",
+          "Fundación Dondé": "...",
+          "First Cash": "...",
+          "PrestaPrenda": "...",
+          "Empeños Mexicanos": "..."
+        }}
+        """
+        raw = self.llm.generate(prompt)
+        return self._safe_json(raw)
+
+    def _safe_json(self, raw: str):
+        try:
+            return json.loads(raw)
+        except Exception:
+            return {"raw_text": raw}
