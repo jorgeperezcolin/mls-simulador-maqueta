@@ -56,4 +56,45 @@ if boton and pregunta.strip():
                     "Originación",
                     "Refrendos",
                     "Inventiencia",
-                    "Reacción competenci
+                    "Reacción competencia",
+                ],
+                "Valor": [
+                    resultado["resultados"]["ticket_promedio"],
+                    resultado["resultados"]["originacion"],
+                    resultado["resultados"]["refrendos"],
+                    resultado["resultados"]["inventario"],
+                    resultado["resultados"]["competencia_reaccion"],
+                ],
+            }
+        )
+        st.dataframe(df, use_container_width=True)
+
+        # Gráfica
+        st.subheader("📈 Impacto cuantitativo (visualización rápida)")
+        graf = pd.DataFrame(
+            {
+                "Métrica": ["Ticket", "Originación", "Refrendos", "Inventario"],
+                "Valor": [
+                    resultado["resultados"]["ticket_promedio"],
+                    resultado["resultados"]["originacion"],
+                    resultado["resultados"]["refrendos"],
+                    resultado["resultados"]["inventario"],
+                ],
+            }
+        )
+        st.bar_chart(graf, x="Métrica", y="Valor")
+
+    # -----------------------
+    # PANEL ESTRATEGISTA MLS
+    # -----------------------
+    with col2:
+        st.subheader("🎯 Recomendaciones estratégicas MLS")
+
+        for r in resultado["recomendaciones"]:
+            st.markdown(f"- {r}")
+
+        st.subheader("🧠 Explicabilidad (XAI)")
+        st.markdown(resultado["xai"])
+
+        st.subheader("📚 Fuente (RAG)")
+        st.caption(resultado["resultados"]["cita_rag"])
