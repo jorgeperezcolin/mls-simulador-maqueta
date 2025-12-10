@@ -1,41 +1,51 @@
-from simulation_engine import SimulationEngine
-from strategist import Strategist
-from xai import XAI
-from rag import RAG
-
+import json
 
 class Orchestrator:
-    """Orquestador de la maqueta.
-    - Interpreta la pregunta (versión reglas simples).
-    - Activa componentes de simulación, recomendación y XAI.
-    """
+    def __init__(self, simulation_engine, strategist):
+        self.engine = simulation_engine
+        self.strategist = strategist
 
-    def __init__(self):
-        self.engine = SimulationEngine()
-        self.strategist = Strategist()
-        self.xai = XAI()
-        self.rag = RAG()
+    def run_query(self, user_question: str) -> dict:
+        # 1. Interpretación de la pregunta → escenario estructurado
+        scenario = self._interpret_query(user_question)
 
-    def _classify(self, question: str) -> dict:
-        q = question.lower()
+        # 2. Simulación
+        sim_output = self.engine.run(scenario)
+
+        # 3. Recomendaciones para MLS
+        recommendations = self.strategist.recommend_actions(sim_output)
+
+        # 4. Reacciones de los competidores
+        competitor_reactions = self.strategist.predict_competitor_reactions(
+            scenario
+        )
+
+        # 5. Respuesta integrada
         return {
-            "oro": ("oro" in q) or ("%" in q),
-            "competencia": any(x in q for x in ["nacional", "first cash", "dondé", "donde", "fundación", "fundacion"]),
-            "marketing": any(x in q for x in ["campaña", "campana", "whatsapp", "publicidad"]),
-            "tasas": "tasa" in q or "tasas" in q,
-            "sucursales": any(x in q for x in ["sucursal", "sucursales", "zonas", "cdmx", "zona"])
+            "simulation": sim_output["results"],
+            "recommendations": recommendations,
+            "competitor_reactions": competitor_reactions
         }
 
-    def process_question(self, question: str) -> dict:
-        activaciones = self._classify(question)
-        cita = self.rag.lookup(question)
-
-        resultados = self.engine.run(activaciones, question, cita)
-        recomendaciones = self.strategist.recommend(resultados, activaciones)
-        explicacion = self.xai.explain(activaciones, resultados, cita)
-
+    def _interpret_query(self, user_question: str) -> dict:
+        """
+        Interpreta una pregunta en lenguaje natural y construye un escenario
+        mínimo viable para la maqueta.
+        """
         return {
-            "resultados": resultados,
-            "recomendaciones": recomendaciones,
-            "xai": explicacion,
+            "pregunta": user_question,
+            "variacion_oro": self._detect_gold_change(user_question),
+            "accion_mls": self._detect_mls_action(user_question)
         }
+
+    def _detect_gold_change(self, q: str):
+        if "oro" in q.lower():
+            return "detectado"
+        return "no detectado"
+
+    def _detect_mls_action(self, q: str):
+        if "tasa" in q.lower():
+            return "cambio de tasa"
+        if "campaña" in q.lower():
+            return "campaña de marketing"
+        return "sin acción específica"
