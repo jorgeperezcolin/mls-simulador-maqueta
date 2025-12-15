@@ -1,34 +1,70 @@
 import streamlit as st
+import pandas as pd
 from orchestrator import Orchestrator
-from simulation_engine import SimulationEngine
-from strategist import Strategist
-from llm_mock import LLM  # Usa tu wrapper real
-from rag import KnowledgeBase  # Usa tu implementación real
 
-st.set_page_config(page_title="Simulador MLS", layout="wide")
+st.set_page_config(
+    page_title="Simulador MLS – Multiagente",
+    layout="wide"
+)
 
-# Inicialización de componentes
-llm = LLM()
-kb = KnowledgeBase()
-engine = SimulationEngine()
-strategist = Strategist(llm=llm, knowledge_base=kb)
-orchestrator = Orchestrator(simulation_engine=engine, strategist=strategist)
+orc = Orchestrator()
 
-st.title("🧠 Simulador Multiagente MLS (Maqueta)")
+st.sidebar.title("Simulador MLS")
+st.sidebar.markdown("Maqueta ejecutiva – Multiagente")
+st.sidebar.divider()
+st.sidebar.markdown("Ejemplos:")
+st.sidebar.markdown("- El oro cae 3% y Nacional reabre")
+st.sidebar.markdown("- MLS baja tasas y hay contracampaña")
+st.sidebar.markdown("- Campaña agresiva en CDMX")
 
-prompt = st.text_area("Haz una pregunta:", height=150)
+st.title("Simulador Multiagente del Mercado Prendario")
+st.markdown("El simulador estima impactos y **reacciones tácticas por competidor**.")
 
-if st.button("Simular"):
-    if prompt.strip() == "":
-        st.warning("Por favor ingresa una pregunta.")
-    else:
-        output = orchestrator.run_query(prompt)
+pregunta = st.text_input(
+    "Plantea el escenario estratégico",
+    placeholder="¿Qué pasa si el oro cae 3% y Nacional Monte de Piedad reabre?"
+)
 
-        st.subheader("📊 Resultados simulados para MLS")
-        st.json(output["simulation"])
+if st.button("Simular escenario", use_container_width=True):
+    if pregunta.strip():
+        resultado = orc.process_question(pregunta)
 
-        st.subheader("🧭 Recomendaciones estratégicas para MLS")
-        st.write(output["recommendations"])
+        col1, col2 = st.columns([1.4, 1])
 
-        st.subheader("⚔️ ¿Qué harán los competidores?")
-        st.json(output["competitor_reactions"])
+        with col1:
+            st.subheader("Impacto cuantitativo")
+
+            df = pd.DataFrame({
+                "Variable": ["Ticket promedio", "Originación", "Refrendos", "Inventario"],
+                "Valor": [
+                    resultado["resultados"]["ticket_promedio"],
+                    resultado["resultados"]["originacion"],
+                    resultado["resultados"]["refrendos"],
+                    resultado["resultados"]["inventario"]
+                ]
+            })
+            st.dataframe(df, use_container_width=True)
+
+            st.subheader("Reacción competitiva agregada")
+            st.info(resultado["resultados"]["competencia_resumen"])
+
+            st.subheader("Qué hará cada competidor")
+            rows = []
+            for comp, acts in resultado["resultados"]["competidores"].items():
+                rows.append({
+                    "Competidor": comp,
+                    "Acción 1": acts[0] if len(acts) > 0 else "",
+                    "Acción 2": acts[1] if len(acts) > 1 else "",
+                    "Acción 3": acts[2] if len(acts) > 2 else ""
+                })
+            st.dataframe(pd.DataFrame(rows), use_container_width=True)
+
+            st.caption(resultado["resultados"]["cita_rag"])
+
+        with col2:
+            st.subheader("Recomendaciones para MLS")
+            for r in resultado["recomendaciones"]:
+                st.markdown(f"- {r}")
+
+            st.subheader("Explicabilidad (XAI)")
+            st.markdown(resultado["xai"])
