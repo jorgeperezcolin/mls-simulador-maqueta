@@ -1,58 +1,21 @@
-import json
-
 class Strategist:
-    def __init__(self, llm, knowledge_base):
-        self.llm = llm
-        self.kb = knowledge_base
 
-    # ------------------------------
-    #   RECOMENDACIONES PARA MLS
-    # ------------------------------
-    def recommend_actions(self, simulation_output):
-        prompt = f"""
-        Contexto: simulación del mercado prendario para MLS.
+    def recommend(self, resultados, flags):
+        recs = []
 
-        Resultados de la simulación:
-        {simulation_output}
+        if resultados["originacion"] < 95:
+            recs.append("Activar ofensiva comercial inmediata (72h).")
+        else:
+            recs.append("Sostener ritmo con disciplina de margen.")
 
-        Devuelve 3–5 recomendaciones estratégicas para MLS,
-        en lenguaje ejecutivo y orientadas a acciones concretas.
-        """
-        return self.llm.generate(prompt)
+        if resultados["ticket_promedio"] < 980:
+            recs.append("Blindar ticket con micro-ajustes de pricing.")
+        else:
+            recs.append("Capturar margen incremental.")
 
-    # ------------------------------
-    #   REACCIONES DE COMPETIDORES
-    # ------------------------------
-    def predict_competitor_reactions(self, scenario: dict):
-        prompt = f"""
-        Predice la reacción más probable de cinco competidores del mercado prendario:
+        if flags["oro"]:
+            recs.append("Monitorear oro diariamente y ajustar LTV.")
 
-        - Nacional Monte de Piedad
-        - Fundación Dondé
-        - First Cash
-        - PrestaPrenda
-        - Empeños Mexicanos
+        recs.append(f"Competencia: {resultados['competencia_resumen']}")
 
-        Basado en este escenario:
-        {json.dumps(scenario, ensure_ascii=False, indent=2)}
-
-        Usa patrones reales del sector (escalas, modelos de negocio, tácticas históricas).
-
-        Devuelve SOLO un JSON con esta estructura EXACTA:
-
-        {{
-          "Nacional Monte de Piedad": "...",
-          "Fundación Dondé": "...",
-          "First Cash": "...",
-          "PrestaPrenda": "...",
-          "Empeños Mexicanos": "..."
-        }}
-        """
-        raw = self.llm.generate(prompt)
-        return self._safe_json(raw)
-
-    def _safe_json(self, raw: str):
-        try:
-            return json.loads(raw)
-        except Exception:
-            return {"raw_text": raw}
+        return recs
