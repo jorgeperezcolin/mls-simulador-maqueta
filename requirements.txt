@@ -1,18 +1,2 @@
-streamlit==1.39.0
-pydantic==2.7.1
-numpy==1.26.4
-pandas==2.2.2
-requests==2.32.3
-python-dotenv==1.0.1
-tqdm==4.66.4
-
-# Para usar LLMs reales (comentado por ahora)
-# openai==1.46.0
-# anthropic==0.25.0
-
-# Para embeddings y RAG ligeros
-sentence-transformers==2.2.2
-faiss-cpu==1.7.4
-
-# Utilidades
-python-dateutil==2.9.0.post0
+streamlit
+pandas
