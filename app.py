@@ -1,70 +1,70 @@
 import streamlit as st
 import pandas as pd
-from orchestrator import Orchestrator
+import matplotlib.pyplot as plt
 
+from orchestrator import run_simulation
+
+
+# =====================================
+# Configuración general de la aplicación
+# =====================================
 st.set_page_config(
-    page_title="Simulador MLS – Multiagente",
+    page_title="Simulador Estratégico Prendario",
     layout="wide"
 )
 
-orc = Orchestrator()
-
-st.sidebar.title("Simulador MLS")
-st.sidebar.markdown("Maqueta ejecutiva – Multiagente")
-st.sidebar.divider()
-st.sidebar.markdown("Ejemplos:")
-st.sidebar.markdown("- El oro cae 3% y Nacional reabre")
-st.sidebar.markdown("- MLS baja tasas y hay contracampaña")
-st.sidebar.markdown("- Campaña agresiva en CDMX")
-
-st.title("Simulador Multiagente del Mercado Prendario")
-st.markdown("El simulador estima impactos y **reacciones tácticas por competidor**.")
-
-pregunta = st.text_input(
-    "Plantea el escenario estratégico",
-    placeholder="¿Qué pasa si el oro cae 3% y Nacional Monte de Piedad reabre?"
+st.title("Simulador Estratégico del Mercado Prendario")
+st.markdown(
+    "Herramienta de simulación de escenarios macroeconómicos y reacciones "
+    "competitivas para soporte a decisiones estratégicas."
 )
 
-if st.button("Simular escenario", use_container_width=True):
-    if pregunta.strip():
-        resultado = orc.process_question(pregunta)
 
-        col1, col2 = st.columns([1.4, 1])
+# =====================================
+# Función: Gráfica del oro + curva forward
+# =====================================
+def plot_gold_forward():
+    data = {
+        "Mes": [
+            "Spot", "1M", "2M", "3M", "4M", "5M",
+            "6M", "7M", "8M", "9M", "10M", "11M", "12M"
+        ],
+        "Precio_USD_oz": [
+            4009.8, 4050, 4080, 4100, 4120, 4140,
+            4160, 4170, 4180, 4190, 4200, 4210, 4250
+        ]
+    }
 
-        with col1:
-            st.subheader("Impacto cuantitativo")
+    df = pd.DataFrame(data)
 
-            df = pd.DataFrame({
-                "Variable": ["Ticket promedio", "Originación", "Refrendos", "Inventario"],
-                "Valor": [
-                    resultado["resultados"]["ticket_promedio"],
-                    resultado["resultados"]["originacion"],
-                    resultado["resultados"]["refrendos"],
-                    resultado["resultados"]["inventario"]
-                ]
-            })
-            st.dataframe(df, use_container_width=True)
+    fig, ax = plt.subplots(figsize=(9, 4))
+    ax.plot(df["Mes"], df["Precio_USD_oz"], marker="o")
 
-            st.subheader("Reacción competitiva agregada")
-            st.info(resultado["resultados"]["competencia_resumen"])
+    ax.set_title("Precio del Oro Spot + Curva Forward (12 meses)")
+    ax.set_xlabel("Horizonte temporal")
+    ax.set_ylabel("USD / onza")
 
-            st.subheader("Qué hará cada competidor")
-            rows = []
-            for comp, acts in resultado["resultados"]["competidores"].items():
-                rows.append({
-                    "Competidor": comp,
-                    "Acción 1": acts[0] if len(acts) > 0 else "",
-                    "Acción 2": acts[1] if len(acts) > 1 else "",
-                    "Acción 3": acts[2] if len(acts) > 2 else ""
-                })
-            st.dataframe(pd.DataFrame(rows), use_container_width=True)
+    ax.grid(True, alpha=0.3)
 
-            st.caption(resultado["resultados"]["cita_rag"])
+    return fig
 
-        with col2:
-            st.subheader("Recomendaciones para MLS")
-            for r in resultado["recomendaciones"]:
-                st.markdown(f"- {r}")
 
-            st.subheader("Explicabilidad (XAI)")
-            st.markdown(resultado["xai"])
+# =====================================
+# Definición del escenario
+# =====================================
+st.subheader("Definición del escenario")
+
+gold_change = st.slider(
+    "Variación porcentual del precio del oro",
+    min_value=-10,
+    max_value=10,
+    value=0,
+    step=1
+)
+
+inflation = st.selectbox(
+    "Nivel de inflación",
+    ["Baja", "Media", "Alta"]
+)
+
+unemployment = st.selectbox(
