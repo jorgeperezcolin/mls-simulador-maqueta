@@ -6,7 +6,7 @@ from orchestrator import run_simulation
 
 
 # =====================================
-# Configuración general de la aplicación
+# Configuración general
 # =====================================
 st.set_page_config(
     page_title="Simulador Estratégico Prendario",
@@ -43,7 +43,6 @@ def plot_gold_forward():
     ax.set_title("Precio del Oro Spot + Curva Forward (12 meses)")
     ax.set_xlabel("Horizonte temporal")
     ax.set_ylabel("USD / onza")
-
     ax.grid(True, alpha=0.3)
 
     return fig
@@ -68,3 +67,57 @@ inflation = st.selectbox(
 )
 
 unemployment = st.selectbox(
+    "Nivel de desempleo",
+    ["Bajo", "Medio", "Alto"]
+)
+
+competitor_behavior = st.selectbox(
+    "Comportamiento esperado de competidores",
+    ["Pasivo", "Reactivo", "Agresivo"]
+)
+
+
+# =====================================
+# Contexto macroeconómico
+# =====================================
+st.subheader("Contexto macroeconómico: precio del oro")
+
+fig = plot_gold_forward()
+st.pyplot(fig)
+
+
+# =====================================
+# Ejecución del simulador
+# =====================================
+if st.button("Ejecutar simulación"):
+    scenario = {
+        "gold_change": gold_change,
+        "inflation": inflation,
+        "unemployment": unemployment,
+        "competitor_behavior": competitor_behavior
+    }
+
+    result = run_simulation(scenario)
+
+    st.subheader("Resultado estratégico")
+    st.write(result)
+
+
+# =====================================
+# Branding Business Data Scientists
+# =====================================
+st.markdown(
+    """
+    <div style="
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        font-weight: bold;
+        font-size: 14px;
+        opacity: 0.85;
+    ">
+        Business Data Scientists
+    </div>
+    """,
+    unsafe_allow_html=True
+)
