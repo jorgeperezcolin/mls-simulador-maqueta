@@ -2,7 +2,7 @@ import os
 import sys
 
 # -------------------------------------
-# Fix de PYTHONPATH para Streamlit Cloud
+# Fix PYTHONPATH para Streamlit Cloud
 # -------------------------------------
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
@@ -15,7 +15,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from orchestrator import run_simulation
+from orchestrator import Orchestrator
 
 
 # =====================================
@@ -28,8 +28,8 @@ st.set_page_config(
 
 st.title("Simulador Estratégico del Mercado Prendario")
 st.markdown(
-    "Herramienta de simulación de escenarios macroeconómicos y "
-    "reacciones competitivas para soporte a decisiones estratégicas."
+    "Simulación de escenarios macroeconómicos y reacciones competitivas "
+    "para soporte a decisiones estratégicas."
 )
 
 
@@ -62,7 +62,7 @@ def plot_gold_forward():
 
 
 # =====================================
-# Definición del escenario
+# Inputs de escenario
 # =====================================
 st.subheader("Definición del escenario")
 
@@ -110,7 +110,8 @@ if st.button("Ejecutar simulación"):
         "competitor_behavior": competitor_behavior
     }
 
-    result = run_simulation(scenario)
+    orchestrator = Orchestrator()
+    result = orchestrator.run(scenario)
 
     st.subheader("Resultado estratégico")
     st.write(result)
