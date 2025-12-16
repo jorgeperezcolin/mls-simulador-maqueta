@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
+import os
+
+# Asegurar que el path raíz esté en PYTHONPATH
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from orchestrator import run_simulation
+
 
 
 # =====================================
